@@ -1,0 +1,117 @@
+* {
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+  background: #f4f6f8;
+  margin: 0;
+  padding: 40px 16px;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+h1 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 24px;
+}
+
+.add-subject {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.add-subject input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.add-subject button {
+  padding: 10px 16px;
+  background: #4a6cf7;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.add-subject button:hover {
+  background: #3a5ce0;
+}
+
+.subject-card {
+  background: #f9fafc;
+  border: 1px solid #e5e8ee;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.subject-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.subject-card-top h3 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.percentage {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.good { color: #27ae60; }
+.bad { color: #e74c3c; }
+
+.subject-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.subject-actions button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.present-btn {
+  background: #d4f7dc;
+  color: #1e7e34;
+}
+
+.absent-btn {
+  background: #fbdada;
+  color: #c0392b;
+}
+
+.delete-btn {
+  background: #eee;
+  color: #555;
+  flex: 0.5;
+}
+
+.stats {
+  font-size: 13px;
+  color: #666;
+  margin: 6px 0;
+}

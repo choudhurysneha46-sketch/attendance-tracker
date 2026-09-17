@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance Tracker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <h1>📋 Attendance Tracker</h1>
+
+    <div class="add-subject">
+      <input type="text" id="subjectName" placeholder="Enter subject name">
+      <button onclick="addSubject()">Add Subject</button>
+    </div>
+
+    <div id="subjectList" class="subject-list">
+      <!-- subjects will be inserted here by JS -->
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
