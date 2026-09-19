@@ -2,11 +2,17 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
 import os
+import firebase_admin
+from firebase_admin import credentials, auth
 
 app = Flask(__name__)
-CORS(app)  # allows frontend (different domain) to talk to this backend
+CORS(app)
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "attendance.db")
+
+# Initialize Firebase Admin
+cred = credentials.Certificate(os.path.join(os.path.dirname(__file__), "firebase-key.json"))
+firebase_admin.initialize_app(cred)
 
 
 def get_db():
@@ -15,14 +21,29 @@ def get_db():
     return conn
 
 
+def get_uid_from_request():
+    """Verify the Firebase token sent in the Authorization header and return the user's uid."""
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return None
+    token = auth_header.split(" ")[1]
+    try:
+        decoded = auth.verify_id_token(token)
+        return decoded["uid"]
+    except Exception:
+        return None
+
+
 def init_db():
     conn = get_db()
     conn.execute("""
         CREATE TABLE IF NOT EXISTS subjects (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE,
+            user_id TEXT NOT NULL,
+            name TEXT NOT NULL,
             total_classes INTEGER NOT NULL DEFAULT 0,
-            attended_classes INTEGER NOT NULL DEFAULT 0
+            attended_classes INTEGER NOT NULL DEFAULT 0,
+            UNIQUE(user_id, name)
         )
     """)
     conn.commit()
@@ -34,11 +55,15 @@ def home():
     return jsonify({"message": "Attendance Tracker API is running"})
 
 
-# Get all subjects with their attendance %
+# Get all subjects for the logged-in user
 @app.route("/api/subjects", methods=["GET"])
 def get_subjects():
+    uid = get_uid_from_request()
+    if not uid:
+        return jsonify({"error": "Unauthorized"}), 401
+
     conn = get_db()
-    rows = conn.execute("SELECT * FROM subjects").fetchall()
+    rows = conn.execute("SELECT * FROM subjects WHERE user_id = ?", (uid,)).fetchall()
     conn.close()
 
     subjects = []
@@ -56,9 +81,13 @@ def get_subjects():
     return jsonify(subjects)
 
 
-# Add a new subject
+# Add a new subject for the logged-in user
 @app.route("/api/subjects", methods=["POST"])
 def add_subject():
+    uid = get_uid_from_request()
+    if not uid:
+        return jsonify({"error": "Unauthorized"}), 401
+
     data = request.get_json()
     name = data.get("name", "").strip()
 
@@ -68,8 +97,8 @@ def add_subject():
     conn = get_db()
     try:
         conn.execute(
-            "INSERT INTO subjects (name, total_classes, attended_classes) VALUES (?, 0, 0)",
-            (name,)
+            "INSERT INTO subjects (user_id, name, total_classes, attended_classes) VALUES (?, ?, 0, 0)",
+            (uid, name)
         )
         conn.commit()
     except sqlite3.IntegrityError:
@@ -79,9 +108,13 @@ def add_subject():
     return jsonify({"message": "Subject added"}), 201
 
 
-# Log a class (present or absent) for a subject
+# Log a class (present or absent) for a subject owned by the logged-in user
 @app.route("/api/subjects/<int:subject_id>/log", methods=["POST"])
 def log_class(subject_id):
+    uid = get_uid_from_request()
+    if not uid:
+        return jsonify({"error": "Unauthorized"}), 401
+
     data = request.get_json()
     present = data.get("present", False)
 
@@ -89,24 +122,28 @@ def log_class(subject_id):
     if present:
         conn.execute(
             "UPDATE subjects SET total_classes = total_classes + 1, "
-            "attended_classes = attended_classes + 1 WHERE id = ?",
-            (subject_id,)
+            "attended_classes = attended_classes + 1 WHERE id = ? AND user_id = ?",
+            (subject_id, uid)
         )
     else:
         conn.execute(
-            "UPDATE subjects SET total_classes = total_classes + 1 WHERE id = ?",
-            (subject_id,)
+            "UPDATE subjects SET total_classes = total_classes + 1 WHERE id = ? AND user_id = ?",
+            (subject_id, uid)
         )
     conn.commit()
     conn.close()
     return jsonify({"message": "Class logged"})
 
 
-# Delete a subject
+# Delete a subject owned by the logged-in user
 @app.route("/api/subjects/<int:subject_id>", methods=["DELETE"])
 def delete_subject(subject_id):
+    uid = get_uid_from_request()
+    if not uid:
+        return jsonify({"error": "Unauthorized"}), 401
+
     conn = get_db()
-    conn.execute("DELETE FROM subjects WHERE id = ?", (subject_id,))
+    conn.execute("DELETE FROM subjects WHERE id = ? AND user_id = ?", (subject_id, uid))
     conn.commit()
     conn.close()
     return jsonify({"message": "Subject deleted"})
@@ -114,6 +151,4 @@ def delete_subject(subject_id):
 
 if __name__ == "__main__":
     init_db()
-    app.run(host="0.0.0.0",
-            port=int(os.environ.get("PORT",5000)))
-    
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

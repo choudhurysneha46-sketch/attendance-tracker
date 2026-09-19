@@ -1,5 +1,8 @@
 async function loadSubjects() {
-  const res = await fetch(`${API_URL}/api/subjects`);
+  const token = localStorage.getItem("authToken");
+const res = await fetch(`${API_URL}/api/subjects`, {
+  headers: { "Authorization": `Bearer ${token}` }
+});
   const subjects = await res.json();
 
   const list = document.getElementById("subjectList");
@@ -35,11 +38,15 @@ async function addSubject() {
   const name = input.value.trim();
   if (!name) return alert("Enter a subject name first");
 
-  const res = await fetch(`${API_URL}/api/subjects`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name })
-  });
+  const token = localStorage.getItem("authToken");
+const res = await fetch(`${API_URL}/api/subjects`, {
+  method: "POST",
+  headers: { 
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
+  },
+  body: JSON.stringify({ name })
+});
 
   if (!res.ok) {
     const err = await res.json();
@@ -51,17 +58,25 @@ async function addSubject() {
 }
 
 async function logClass(id, present) {
-  await fetch(`${API_URL}/api/subjects/${id}/log`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ present })
-  });
+  const token = localStorage.getItem("authToken");
+await fetch(`${API_URL}/api/subjects/${id}/log`, {
+  method: "POST",
+  headers: { 
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
+  },
+  body: JSON.stringify({ present })
+});
   loadSubjects();
 }
 
 async function deleteSubject(id) {
   if (!confirm("Delete this subject?")) return;
-  await fetch(`${API_URL}/api/subjects/${id}`, { method: "DELETE" });
+  const token = localStorage.getItem("authToken");
+await fetch(`${API_URL}/api/subjects/${id}`, { 
+  method: "DELETE",
+  headers: { "Authorization": `Bearer ${token}` }
+});
   loadSubjects();
 }
 

@@ -5,11 +5,56 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Attendance Tracker</title>
 <link rel="stylesheet" href="style.css">
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB2N5V2cdbNYnXkyyqYtq8l6BMK1WjnKGQ",
+    authDomain: "attendance-tracker-d061f.firebaseapp.com",
+    projectId: "attendance-tracker-d061f",
+    storageBucket: "attendance-tracker-d061f.firebasestorage.app",
+    messagingSenderId: "260433868329",
+    appId: "1:260433868329:web:ac30489c51b04f554b8e38"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  window.loginWithGoogle = () => {
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        console.log("Logged in:", result.user);
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("appScreen").style.display = "block";
+        document.getElementById("userName").innerText = result.user.displayName;
+        result.user.getIdToken().then((token) => {
+  localStorage.setItem("authToken", token);
+});
+      })
+      .catch((error) => console.error(error));
+  };
+
+  window.logout = () => {
+    signOut(auth).then(() => {
+      localStorage.removeItem("authToken");
+      document.getElementById("loginScreen").style.display = "flex";
+      document.getElementById("appScreen").style.display = "none";
+    });
+  };
+</script>
 </head>
 <body>
 
-  <div class="container">
-    <h1>📋 Attendance Tracker</h1>
+  <div id="loginScreen" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh;">
+  <h1>📋 Attendance Tracker</h1>
+  <button onclick="loginWithGoogle()" style="padding:12px 24px; font-size:16px; cursor:pointer;">Continue with Google</button>
+</div>
+
+<div id="appScreen" class="container" style="display:none;">
+  <p>Welcome, <span id="userName"></span> | <button onclick="logout()">Logout</button></p>
+    
 
     <div class="add-subject">
       <input type="text" id="subjectName" placeholder="Enter subject name">
@@ -25,3 +70,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
